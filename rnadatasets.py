@@ -11,6 +11,7 @@ from torch.utils.data import Dataset
 import pandas as pd
 from torch.nn.utils.rnn import pad_sequence
 import pytorch_lightning as pl
+from arnie.bpps import bpps
 
 class RNA_Dataset(Dataset):
     def __init__(self,df, experiment):
@@ -131,7 +132,7 @@ class StructureProbDataset(Dataset):
         reactivity[reactivity.isnan()] = 0.0
         reactivity=torch.clamp(reactivity, min=0)
         #print(idx,seq.shape,reactivity.shape)
-        return seq,reactivity
+        return torch.Tensor(seq),reactivity
 
     def encode_rna_sequence(self,sequence):
         return bpps(sequence, package='eternafold')
