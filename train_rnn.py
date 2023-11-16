@@ -2,6 +2,7 @@ import sys
 import torch.nn as nn
 import torch.optim as optim
 import torch
+from settings import *
 from models import *
 from rnadatasets import *
 
@@ -36,7 +37,7 @@ if __name__ == "__main__":
         lmodel = SimpleRNN(input_size=1, hidden_size=13,output_size=1,n_rnn_layers=95,linear_size=27,learning_rate=0.0040788051568258835)
     
     
-    datamodule = RNADataModule(experiment=experiment_type, batch_size=128,data_file="train_data.parquet")
+    datamodule = RNADataModule(experiment=experiment_type, batch_size=TRAIN_BATCH_SIZE,data_file=TRAIN_DATASET_FILE)
 
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
         monitor='val_loss',
@@ -45,11 +46,11 @@ if __name__ == "__main__":
         save_last=True,
         filename='rnn-model-{epoch:02d}-{val_loss:.2f}',
         every_n_epochs=1,
-        dirpath="./out"+experiment_type
+        dirpath=MODEL_DIR_PREFIX+experiment_type
     )
     #validation_loss_callback = ValidationLossCallback()
     print(type(lmodel))
-    trainer = pl.Trainer(max_epochs=10, callbacks=[checkpoint_callback],accelerator="gpu", devices=[0,1,2,3], strategy="ddp")
+    trainer = pl.Trainer(max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback],accelerator=ACCELERATION, devices=DEVICES, strategy="ddp")
 
     # Train the model
     trainer.fit(lmodel, datamodule=datamodule)
