@@ -129,3 +129,38 @@ class StructureProbDataset(Dataset):
         return torch.Tensor(seq),reactivity
 
 
+class ProbDataModule(pl.LightningDataModule):
+    def __init__(self, src_dir: str, batch_size: int):
+        super().__init__()
+        self.src_dir= src_dir
+        self.batch_size = batch_size
+
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        dataset=StructureProbDataset(self.src_dir)
+        train_size = int(0.8 * len(dataset))
+        val_size = (len(dataset) - train_size) // 2
+        test_size = len(dataset) - train_size - val_size
+        self.no_workers=1
+        self.train_dataset, self.val_dataset, self.test_dataset = random_split(dataset, [train_size, val_size, test_size])
+
+    def train_dataloader(self) -> DataLoader:
+        return  DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True,num_workers=self.no_workers,collate_fn=self.custom_collate_fn,pin_memory=True)
+
+    def val_dataloader(self) -> DataLoader:
+        return DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False,num_workers=self.no_workers,collate_fn=self.custom_collate_fn,pin_memory=True)
+    
+    def test_dataloader(self) -> DataLoader:
+        return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False,num_workers=self.no_workers,collate_fn=self.custom_collate_fn,pin_memory=True)
+    
+    def custom_collate_fn(self,data):
+        # inputs=[]
+        # labels=[]
+        # for x,y in data:
+        #     inputs.append(x)
+        #     labels.append(y)
+        # input_tensors = pad_sequence(inputs, batch_first=True, padding_value=0)
+        # label_tensors = pad_sequence(labels, batch_first=True, padding_value=0)
+        # return input_tensors,label_tensors
+        return data
+
