@@ -11,7 +11,7 @@ from torch.utils.data import Dataset
 import pandas as pd
 from torch.nn.utils.rnn import pad_sequence
 import pytorch_lightning as pl
-from arnie.bpps import bpps
+import glob
 
 class RNA_Dataset(Dataset):
     def __init__(self,df, experiment):
@@ -109,31 +109,23 @@ class RNADataModule(pl.LightningDataModule):
 
 
 class StructureProbDataset(Dataset):
-    def __init__(self,file,experiment):
-        df=pd.read_parquet(file, engine='fastparquet')
-        df=df[df['experiment_type'] == experiment]
-        df=df.drop_duplicates()
-        df=df.drop(columns=df.filter(like='error').columns,axis=1)
-        df=df.drop(['reads', 'SN_filter','signal_to_noise','sequence_id','experiment_type','dataset_name'],axis=1)
-        reactivity_cols = df.filter(like='reactivity').columns
-        df['reactivity'] = df[reactivity_cols].values.tolist()
-        df = df.drop(columns=df.filter(like='reactivity_').columns,axis=1)
-        self.df=df.reset_index(drop=True)
+    def __init__(self,src_dir):
+        files_pattern = os.path.join(src_dir, '*.npz')
+        self.file_list = glob.glob(files_pattern)
+
     def __len__(self):
-        return len(self.df)  
+        return len(self.file_list)  
     
     def __getitem__(self, idx):
         
-        row=self.df.loc[idx]
-        seq=self.encode_rna_sequence(row['sequence'])
-        seq_len=len(row['sequence'])
-        selected_reactivities=row['reactivity'][0:seq_len]
+        src_file=self.file_list[idx]
+        row=np.load(src_file,allow_pickle=True)
+        seq=row['seq']
+        selected_reactivities=row['reactivity']
         reactivity = torch.Tensor(selected_reactivities)
         reactivity[reactivity.isnan()] = 0.0
         reactivity=torch.clamp(reactivity, min=0)
         #print(idx,seq.shape,reactivity.shape)
         return torch.Tensor(seq),reactivity
 
-    def encode_rna_sequence(self,sequence):
-        return bpps(sequence, package='eternafold')
 

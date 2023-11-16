@@ -14,3 +14,7 @@ MODEL_DIR_PREFIX="../out"
 TRAIN_DATASET_FILE="../train_data.parquet"
 SAMPLE_DATA="../subset_data.parquet"
 TEST_DATA="../test_sequences.csv"
+
+
+experiments = ["DMS_MaP","2A3_MaP"]
+target_dirs = ["../DMS_MaP","../2A3_MaP"]
