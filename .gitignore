@@ -9,8 +9,10 @@ __pycache__/
 *.parquet
 *.zip
 *.ckpt
+push.txt
 # Distribution / packaging
 lightning_logs/
+tmp/
 .Python
 build/
 develop-eggs/
