@@ -77,22 +77,59 @@ class Decoder(nn.Module):
         x = self.net(x)
         return x
 
+
+import torch
+import torch.nn as nn
+
+class BPPReactivityPredictor(nn.Module):
+    def __init__(self, input_channels, output_size):
+        super(BPPReactivityPredictor, self).__init__()
+
+        # Convolutional layers
+        self.conv1 = nn.Conv2d(in_channels=input_channels, out_channels=32, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1)
+
+        # Fully connected layers
+        self.fc1 = nn.Linear(64 * 177 * 177, 128)  # Adjust the input size based on your data
+        self.fc2 = nn.Linear(128, output_size)
+
+        # Activation function
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        # Input size: (batch_size, input_channels, height, width)
+
+        # Convolutional layers with ReLU activation
+        x = self.relu(self.conv1(x))
+        x = self.relu(self.conv2(x))
+
+        # Flatten the output for fully connected layers
+        x = x.view(x.size(0), -1)
+
+        # Fully connected layers with ReLU activation
+        x = self.relu(self.fc1(x))
+        x = self.fc2(x)
+
+        return x
+
+
+
+
+
+
+
 class Autoencoder(pl.LightningModule):
     def __init__(
         self,
-        base_channel_size: int=1,
-        latent_dim: int=177,
-        encoder_class: object = Encoder,
-        decoder_class: object = Decoder,
-        num_input_channels: int = 1,
-        width: int = 177,
-        height: int = 177,
+        output_size: int=177,
+        encoder_class: object = BPPReactivityPredictor,
+        input_size: int = 177,
     ):
         super().__init__()
         # Saving hyperparameters of autoencoder
         self.save_hyperparameters()
         # Creating encoder and decoder
-        self.encoder = encoder_class(num_input_channels, base_channel_size, latent_dim)
+        self.encoder = encoder_class(1,177)
         # Example input array needed for visualizing the graph of the network
         #SSSself.example_input_array = torch.zeros(2, num_input_channels, width, height)
 
