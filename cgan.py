@@ -80,7 +80,7 @@ class Decoder(nn.Module):
 class Autoencoder(pl.LightningModule):
     def __init__(
         self,
-        base_channel_size: int=3,
+        base_channel_size: int=1,
         latent_dim: int=177,
         encoder_class: object = Encoder,
         decoder_class: object = Decoder,
@@ -107,6 +107,7 @@ class Autoencoder(pl.LightningModule):
         seq,reactivity = batch  # We do not need the labels
         print(seq.shape,reactivity.shape)
         reactivity_hat = self.forward(seq)
+        print(reactivity.shape, reactivity_hat.shape)
         loss = F.mse_loss(reactivity, reactivity_hat, reduction="none")
         loss = loss.sum().mean()
         return loss

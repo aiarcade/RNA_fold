@@ -123,13 +123,14 @@ class StructureProbDataset(Dataset):
         
         src_file=self.file_list[idx]
         row=np.load(src_file,allow_pickle=True)
-        seq=row['seq']
+        seq=torch.Tensor(row['seq'])
         selected_reactivities=row['reactivity']
         reactivity = torch.Tensor(selected_reactivities)
         reactivity[reactivity.isnan()] = 0.0
         reactivity=torch.clamp(reactivity, min=0)
         #print(idx,seq.shape,reactivity.shape)
-        return self.transforms_seq(torch.Tensor(seq)),self.transforms_rect(reactivity)
+        seq=self.transforms_seq(seq.unsqueeze(0))
+        return seq.squeeze(0),reactivity
 
 
 class ProbDataModule(pl.LightningDataModule):
