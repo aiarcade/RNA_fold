@@ -114,7 +114,6 @@ class StructureProbDataset(Dataset):
         files_pattern = os.path.join(src_dir, '*.npz')
         self.file_list = glob.glob(files_pattern)
         self.transforms_seq=transforms.Compose([transforms.Resize([177,177])])
-        self.transforms_rect=transforms.Compose([transforms.Resize([177])])
 
     def __len__(self):
         return len(self.file_list)  
@@ -130,7 +129,22 @@ class StructureProbDataset(Dataset):
         reactivity=torch.clamp(reactivity, min=0)
         #print(idx,seq.shape,reactivity.shape)
         seq=self.transforms_seq(seq.unsqueeze(0))
-        return seq.squeeze(0),reactivity
+        batch=seq,self.pad_tensor(reactivity,177)
+        #print(batch[0].shape,batch[1].shape)
+        return batch
+
+    def pad_tensor(self,input_tensor, desired_length):
+        current_length = len(input_tensor)
+        if current_length>desired_length:
+            return input_tensor[:desired_length]
+        
+        # Calculate the amount of padding needed at the end
+        pad_end = max(0, desired_length - current_length)
+        
+        # Use torch.nn.functional.pad to pad the tensor at the end
+        padded_tensor = torch.nn.functional.pad(input_tensor, (0, pad_end), value=0)
+        
+        return padded_tensor
 
 
 class ProbDataModule(pl.LightningDataModule):
