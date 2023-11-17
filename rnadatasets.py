@@ -12,6 +12,7 @@ import pandas as pd
 from torch.nn.utils.rnn import pad_sequence
 import pytorch_lightning as pl
 import glob
+from torchvision import transforms
 
 class RNA_Dataset(Dataset):
     def __init__(self,df, experiment):
@@ -112,6 +113,8 @@ class StructureProbDataset(Dataset):
     def __init__(self,src_dir):
         files_pattern = os.path.join(src_dir, '*.npz')
         self.file_list = glob.glob(files_pattern)
+        self.transforms_seq=transforms.Compose([transforms.Resize([177,177])])
+        self.transforms_rect=transforms.Compose([transforms.Resize([177])])
 
     def __len__(self):
         return len(self.file_list)  
@@ -126,7 +129,7 @@ class StructureProbDataset(Dataset):
         reactivity[reactivity.isnan()] = 0.0
         reactivity=torch.clamp(reactivity, min=0)
         #print(idx,seq.shape,reactivity.shape)
-        return torch.Tensor(seq),reactivity
+        return self.transforms_seq(torch.Tensor(seq)),self.transforms_rect(reactivity)
 
 
 class ProbDataModule(pl.LightningDataModule):
@@ -145,13 +148,13 @@ class ProbDataModule(pl.LightningDataModule):
         self.train_dataset, self.val_dataset, self.test_dataset = random_split(dataset, [train_size, val_size, test_size])
 
     def train_dataloader(self) -> DataLoader:
-        return  DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True,num_workers=self.no_workers,collate_fn=self.custom_collate_fn,pin_memory=True)
+        return  DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True,num_workers=self.no_workers,pin_memory=True)
 
     def val_dataloader(self) -> DataLoader:
-        return DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False,num_workers=self.no_workers,collate_fn=self.custom_collate_fn,pin_memory=True)
+        return DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False,num_workers=self.no_workers,pin_memory=True)
     
     def test_dataloader(self) -> DataLoader:
-        return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False,num_workers=self.no_workers,collate_fn=self.custom_collate_fn,pin_memory=True)
+        return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False,num_workers=self.no_workers,pin_memory=True)
     
     def custom_collate_fn(self,data):
         # inputs=[]

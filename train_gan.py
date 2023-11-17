@@ -16,10 +16,10 @@ if __name__ == "__main__":
 
     if experiment_type=="2A3_MaP":
        
-        lmodel = CGAN()
+        lmodel = Autoencoder()
     else:
        
-        lmodel = CGAN()
+        lmodel = Autoencoder()
     
     
     datamodule = ProbDataModule(target_dirs[0],batch_size=TRAIN_BATCH_SIZE)
