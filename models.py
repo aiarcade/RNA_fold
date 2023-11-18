@@ -198,7 +198,7 @@ class BPPReactivityPredictor(pl.LightningModule):
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1)
 
         # Adjusted Fully connected layers
-        self.fc1 = nn.Linear(64 * 177 * 177, 128)
+        self.fc1 = nn.Linear(64 * output_size * output_size, 128)
         self.fc2 = nn.Linear(128, output_size)
 
         # Activation function

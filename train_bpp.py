@@ -14,10 +14,10 @@ if __name__ == "__main__":
     print("Experiment type",experiment_type)
 
     if experiment_type=="2A3_MaP":
-        datamodule=ProbDataModule(target_dirs[0],batch_size=TRAIN_BATCH_SIZE)
+        datamodule=ProbDataModule(target_dirs[1],batch_size=TRAIN_BATCH_SIZE)
         lmodel = BPPReactivityPredictor(1, 177)
     else:
-        datamodule=ProbDataModule(target_dirs[1],batch_size=TRAIN_BATCH_SIZE)
+        datamodule=ProbDataModule(target_dirs[0],batch_size=TRAIN_BATCH_SIZE)
         lmodel = BPPReactivityPredictor(1, 177)
 
     checkpoint_callback = pl.callbacks.ModelCheckpoint(

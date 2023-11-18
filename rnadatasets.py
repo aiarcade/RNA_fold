@@ -182,3 +182,25 @@ class ProbDataModule(pl.LightningDataModule):
         # return input_tensors,label_tensors
         return data
 
+class StructureProbTestDataset(Dataset):
+    def __init__(self,src_dir):
+        files_pattern = os.path.join(src_dir, '*.npz')
+        self.file_list = glob.glob(files_pattern)
+        self.transforms_seq=transforms.Compose([transforms.Resize([177,177])])
+        self.src_dir=src_dir
+
+    def __len__(self):
+        return len(self.file_list)  
+    
+    def __getitem__(self, idx):
+        src_file= self.src_dir+str(idx)+'.npz'
+        row=np.load(src_file,allow_pickle=True)
+        seq=torch.Tensor(row['seq'])
+        ids=row['ids']
+        #print(idx,seq.shape,reactivity.shape)
+        seq=self.transforms_seq(seq.unsqueeze(0))
+        
+        #print(batch[0].shape,batch[1].shape)
+        return seq,ids,idx
+
+
