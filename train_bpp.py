@@ -9,7 +9,7 @@ from rnadatasets import *
 
 if __name__ == "__main__":
 
-    pl.seed_everything(42)
+    pl.seed_everything(42, workers=True)
     experiment_type=sys.argv[1]
     print("Experiment type",experiment_type)
 
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     )
 
     print(type(lmodel))
-    trainer = pl.Trainer(precision=16,max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback],accelerator=ACCELERATION, devices=DEVICES, strategy="ddp")
+    trainer = pl.Trainer(precision=16,max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback],accelerator=ACCELERATION, devices=DEVICES, strategy="ddp",enable_progress_bar=False)
 
     # Train the model
     trainer.fit(lmodel, datamodule=datamodule)
