@@ -181,26 +181,7 @@ class ProbDataModule(pl.LightningDataModule):
         # return input_tensors,label_tensors
         return data
 
-# class StructureProbTestDataset(Dataset):
-#     def __init__(self,src_dir):
-#         files_pattern = os.path.join(src_dir, '*.npz')
-#         self.file_list = glob.glob(files_pattern)
-#         self.transforms_seq=transforms.Compose([transforms.Resize([177,177])])
-#         self.src_dir=src_dir
 
-#     def __len__(self):
-#         return len(self.file_list)  
-    
-#     def __getitem__(self, idx):
-#         src_file= self.src_dir+str(idx)+'.npz'
-#         row=np.load(src_file,allow_pickle=True)
-#         seq=torch.Tensor(row['seq'])
-#         ids=row['ids']
-#         #print(idx,seq.shape,reactivity.shape)
-#         seq=self.transforms_seq(seq.unsqueeze(0))
-        
-#         #print(batch[0].shape,batch[1].shape)
-#         return seq,ids,idx
 
 
 class StructureProbTestDataset(Dataset):
@@ -299,3 +280,30 @@ class ProbDataModuleWithFixed500(pl.LightningDataModule):
         # label_tensors = pad_sequence(labels, batch_first=True, padding_value=0)
         # return input_tensors,label_tensors
         return data
+
+
+class StructureProbTestDataset500(Dataset):
+    def __init__(self,src_dir):
+        
+        files = os.listdir(src_dir)
+        numeric_parts=[]
+        for file in files:
+            numeric_parts.append(int(file.replace(".npz","")))
+        self.file_list = sorted(numeric_parts)
+
+        self.transforms_seq=transforms.Compose([transforms.Resize([500,500],antialias=False)])
+        self.src_dir=src_dir
+
+    def __len__(self):
+        return len(self.file_list)  
+    
+    def __getitem__(self, idx):
+        src_file= self.src_dir+str(self.file_list[idx])+'.npz'
+        row=np.load(src_file,allow_pickle=True)
+        seq=torch.Tensor(row['seq'])
+        ids=row['ids']
+        #print(idx,seq.shape,reactivity.shape)
+        seq=self.transforms_seq(seq.unsqueeze(0))
+        
+        #print(batch[0].shape,batch[1].shape)
+        return seq,ids

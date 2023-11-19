@@ -12,9 +12,9 @@ class Imageset():
         self.start_num=start_num
     def save(self):
         id=self.start_num
-        for index, row in tqdm(self.df.iterrows()):
+        for index, row in self.df.iterrows():
             ids=np.array([row['id_min'],row['id_max']])
-            file_path=self.target_dir+"/"+str(id)+".npz"
+            file_path=self.target_dir+"/"+str(ids[0])+".npz"
             if os.path.exists(file_path):
                 id=id+1
                 continue
@@ -64,14 +64,17 @@ if __name__ == "__main__":
         remaining_rows = len(df) % 60
         start_index = 0
         print("Total rows",len(df))
+        total=0
         for i in range(60):
         # Calculate the end index for each split
             end_index = start_index + rows_per_df + (1 if i < remaining_rows else 0)
             part_df=df.iloc[start_index:end_index]
             print("Starting convertion from",start_index,end_index)
+            total=total+end_index-start_index
             process_c=mp.Process(target=createImages, args=(part_df,target_dirs[ex],start_index))
             process_c.start()
             processes.append(process_c)
             start_index = end_index
     for p in processes:
         p.join()
+    print(total)

@@ -20,14 +20,14 @@ logging.basicConfig(filename="predict.txt",
 
 logging.info("Prediction started")
 
-model2a3=BPPReactivityPredictor.load_from_checkpoint("2a3.ckpt",map_location=torch.device('cuda:0'),input_channels=1, output_size=177 )
+model2a3=BPPReactivityPredictorWithRNN.load_from_checkpoint("2a3.ckpt",map_location=torch.device('cuda:0') )
 model2a3.eval()
 
-modeldms=BPPReactivityPredictor.load_from_checkpoint("dms.ckpt",map_location=torch.device('cuda:1'),input_channels=1, output_size=177 )
+modeldms=BPPReactivityPredictorWithRNN.load_from_checkpoint("dms.ckpt",map_location=torch.device('cuda:1') )
 modeldms.eval()
 
 
-dataset=StructureProbTestDataset("../test_sequences.csv")
+dataset=StructureProbTestDataset500("../testdata/")
 test_dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 
 outf=open("../submission.csv","w")
@@ -36,7 +36,8 @@ header="id,reactivity_DMS_MaP,reactivity_2A3_MaP\n"
 lines=[header]
 id_max=0
 print("Starting prediction ...")
-for x,ids,fid in test_dataloader :
+p_no=0
+for x,ids in test_dataloader :
     with torch.no_grad():
         x_2=x.clone().detach()
         x=x.to("cuda:0")
@@ -50,22 +51,26 @@ for x,ids,fid in test_dataloader :
             try:
                 re_dms=round(y_dms[idx],3)
             except:
-                logging.info("A3:Not enough values for seq "+str(fid))
+                logging.info("A3:Not enough values for seq "+str(id_min))
                 re_dms=0.0 
             if re_dms<=0:
                 re_dms=0.0
             try:
                 re_2a3=round(y_2a3[idx],3)
             except:
-                logging.info("DMS:Not enough values for seq "+str(fid))
+                logging.info("DMS:Not enough values for seq "+str(id_min))
                 re_2a3=0.0
 
             if re_2a3<=0:
                 re_2a3=0.0
                         
             lines.append(str(i)+","+str(re_dms)+","+str(re_2a3)+"\n")
+            #print(lines)
             idx=idx+1
-    if fid%10000==0:
-        print("Completed upto",fid)
+    if p_no%10000==0:
+        print("Completed upto",p_no)
+    p_no=p_no+1
+    #break
+    
 
 outf.writelines(lines)
