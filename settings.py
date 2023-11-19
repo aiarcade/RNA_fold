@@ -3,8 +3,8 @@ import torch
 torch.backends.cuda.matmul.allow_tf32 = True 
 torch.backends.cudnn.allow_tf32 = True
 ACCELERATION="gpu"
-DEVICES=[2,3]
-TRAIN_BATCH_SIZE=64
+DEVICES=[0,1,2,3]
+TRAIN_BATCH_SIZE=128
 TRAIN_EPOCHS=25
 TUNING_EPOCHS=3
 TUNING_TRIALS=10
@@ -17,4 +17,4 @@ TEST_DATA="../test_sequences.csv"
 
 
 experiments = ["DMS_MaP","2A3_MaP"]
-target_dirs = ["../DMS_MaP","../2A3_MaP"]
+target_dirs = ["../DMS_MaP","../2A3_MaP"] 

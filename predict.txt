@@ -1,0 +1,21 @@
+11:57:07,396 root INFO Prediction started
+11:57:07,451 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/2a3.ckpt
+11:57:11,800 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/dms.ckpt
+12:00:03,391 root INFO Prediction started
+12:00:03,446 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/2a3.ckpt
+12:00:07,835 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/dms.ckpt
+12:02:18,780 root INFO Prediction started
+12:02:18,836 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/2a3.ckpt
+12:02:23,243 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/dms.ckpt
+12:04:45,125 root INFO Prediction started
+12:04:45,180 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/2a3.ckpt
+12:04:49,609 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/dms.ckpt
+12:05:52,617 root INFO Prediction started
+12:05:52,675 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/2a3.ckpt
+12:05:57,78 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/dms.ckpt
+12:06:28,398 root INFO Prediction started
+12:06:28,453 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/2a3.ckpt
+12:06:32,867 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/dms.ckpt
+23:13:27,256 root INFO Prediction started
+23:13:27,313 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/2a3.ckpt
+23:13:31,912 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/dms.ckpt

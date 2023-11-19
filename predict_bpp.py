@@ -10,8 +10,15 @@ from models import *
 
 from rnadatasets import *
 
+import logging 
 
+logging.basicConfig(filename="predict.txt",
+                    filemode='a',
+                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                    datefmt='%H:%M:%S',
+                    level=logging.DEBUG)
 
+logging.info("Prediction started")
 
 model2a3=BPPReactivityPredictor.load_from_checkpoint("2a3.ckpt",map_location=torch.device('cuda:0'),input_channels=1, output_size=177 )
 model2a3.eval()
@@ -20,7 +27,7 @@ modeldms=BPPReactivityPredictor.load_from_checkpoint("dms.ckpt",map_location=tor
 modeldms.eval()
 
 
-dataset=StructureProbTestDataset("../testdata/")
+dataset=StructureProbTestDataset("../test_sequences.csv")
 test_dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 
 outf=open("../submission.csv","w")
@@ -43,14 +50,14 @@ for x,ids,fid in test_dataloader :
             try:
                 re_dms=round(y_dms[idx],3)
             except:
-                print("A3:Not enough values for seq ",fid)
+                logging.info("A3:Not enough values for seq "+str(fid))
                 re_dms=0.0 
             if re_dms<=0:
                 re_dms=0.0
             try:
                 re_2a3=round(y_2a3[idx],3)
             except:
-                print("DMS:Not enough values for seq ",fid)
+                logging.info("DMS:Not enough values for seq "+str(fid))
                 re_2a3=0.0
 
             if re_2a3<=0:
