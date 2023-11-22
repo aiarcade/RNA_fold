@@ -41,11 +41,21 @@ import pandas as pd
 def length(min,max):
     return max-min
 
-df=pd.read_csv("../test_sequences.csv")
-df['sequence_length']= df.apply(lambda row: length(row['id_min'], row['id_max']), axis=1)
+#df=pd.read_csv("../test_sequences.csv")
+df=pd.read_parquet("../train_data.parquet")
+#df['sequence_length']= df.apply(lambda row: length(row['id_min'], row['id_max']), axis=1)
+df['sequence_length']= df['sequence'].apply(len)
 length_counts = df['sequence_length'].value_counts()
 
 # Print the count of each unique length
 print(length_counts)
 
+df=pd.read_csv("../test_sequences.csv")
+#df=pd.read_parquet("../train_data.parquet")
+#df['sequence_length']= df.apply(lambda row: length(row['id_min'], row['id_max']), axis=1)
+df['sequence_length']= df['sequence'].apply(len)
+length_counts = df['sequence_length'].value_counts()
+
+# Print the count of each unique length
+print(length_counts)
 

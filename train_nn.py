@@ -24,7 +24,7 @@ if __name__ == "__main__":
                 l_units: 125
                 learning_rate: 0.010777591568048049
         """
-        lmodel = SimpleRNN(input_size=1, hidden_size=128,output_size=1,n_rnn_layers=128,linear_size=128,learning_rate=0.001)
+        lmodel = SimpleNN()
     else:
         """Best trial:
                 Value: 0.22255480289459229
@@ -34,22 +34,22 @@ if __name__ == "__main__":
                     l_units: 27
                     learning_rate: 0.0040788051568258835
         """
-        lmodel = SimpleRNN(input_size=1, hidden_size=13,output_size=1,n_rnn_layers=95,linear_size=27,learning_rate=0.0040788051568258835)
+        lmodel = SimpleNN()
     
     
-    datamodule = RNADataModule(experiment=experiment_type, batch_size=TRAIN_BATCH_SIZE,data_file=TRAIN_DATASET_FILE)
+    datamodule = RNANNDataModule(experiment=experiment_type, batch_size=TRAIN_BATCH_SIZE,data_file=TRAIN_DATASET_FILE)
 
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
         monitor='val_loss',
         mode='min',
         save_top_k=1,
         save_last=True,
-        filename='rnn-model-{epoch:02d}-{val_loss:.2f}',
+        filename='nn-model-{epoch:02d}-{val_loss:.2f}',
         every_n_epochs=1,
         dirpath=MODEL_DIR_PREFIX+experiment_type
-    )
+    ) 
     #validation_loss_callback = ValidationLossCallback()
-    trainer = pl.Trainer(limit_train_batches=0.1,limit_val_batches=10 ,max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback],accelerator=ACCELERATION, devices=DEVICES, strategy="ddp")
+    trainer = pl.Trainer(max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback],accelerator=ACCELERATION, devices=DEVICES, strategy="ddp")
 
     # Train the model
     trainer.fit(lmodel, datamodule=datamodule)

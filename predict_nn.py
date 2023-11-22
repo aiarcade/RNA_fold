@@ -7,14 +7,10 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from models import *
-
+import logging
 from rnadatasets import *
-import logging 
 
-torch.backends.cuda.matmul.allow_tf32 = True # allow tf32 on matmul
-torch.backends.cudnn.allow_tf32 = True
-
-logging.basicConfig(filename="predict.txt",
+logging.basicConfig(filename="predict_nn.txt",
                     filemode='a',
                     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                     datefmt='%H:%M:%S',
@@ -22,32 +18,41 @@ logging.basicConfig(filename="predict.txt",
 
 logging.info("Prediction started")
 
-model2a3=BPPReactivityPredictorWithRNN.load_from_checkpoint("2a3.ckpt",map_location=torch.device('cuda:0') )
+torch.backends.cuda.matmul.allow_tf32 = True 
+torch.backends.cudnn.allow_tf32 = True
+# Instantiate the Lightning model
+input_size = 1  # Each element in the sequence is a scalar
+hidden_size = 128
+output_size = 1
+
+model2a3=SimpleNN.load_from_checkpoint("2a3_nn.ckpt",map_location=torch.device('cuda:0'))
 model2a3.eval()
 
-modeldms=BPPReactivityPredictorWithRNN.load_from_checkpoint("dms.ckpt",map_location=torch.device('cuda:1') )
+modeldms=SimpleNN.load_from_checkpoint("dms_nn.ckpt",map_location=torch.device('cuda:1'))
 modeldms.eval()
 
 
-dataset=StructureProbTestDataset500("../testdata/")
+data=pd.read_csv('../test_sequences.csv')
+
+
+dataset=RNA_NNTestDataset(data)
 test_dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 
-outf=open("../submission.csv","w")
+outf=open("submission.csv","w")
 header="id,reactivity_DMS_MaP,reactivity_2A3_MaP\n"
 
-lines=[header]
-id_max=0
-print("Starting prediction ...")
-p_no=0
-for x,ids in test_dataloader :
+outf.write(header)
+for x,ids in tqdm(test_dataloader) :
+    #print(x.shape)
     with torch.no_grad():
         x_2=x.clone().detach()
         x=x.to("cuda:0")
         x_2=x_2.to("cuda:1")
         y_2a3 = model2a3(x).to("cpu").tolist()[0]
         y_dms = modeldms(x_2).to("cpu").tolist()[0]
-        id_min=int(ids[0][0])
-        id_max=int(ids[0][1])
+        
+        id_min=int(ids[0].tolist()[0])
+        id_max=int(ids[1].tolist()[0])
         idx=0
         for i in range(id_min,id_max+1):
             try:
@@ -66,13 +71,8 @@ for x,ids in test_dataloader :
             if re_2a3<=0:
                 re_2a3=0.0
                         
-            lines.append(str(i)+","+str(re_dms)+","+str(re_2a3)+"\n")
-            #print(lines)
+            line=str(i)+","+str(re_dms)+","+str(re_2a3)+"\n"
+            outf.write(line)
             idx=idx+1
-    if p_no%10000==0:
-        print("Completed upto",p_no)
-    p_no=p_no+1
-    #break
-    
-
-outf.writelines(lines)
+        
+#outf.writelines(lines)

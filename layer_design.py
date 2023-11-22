@@ -52,7 +52,9 @@ print(len(StructureProbDatasetWithFixed500("../2A3_MaP")))
 
 for x,y in StructureProbDatasetWithFixed500("../2A3_MaP"):
     x=x.unsqueeze(0)#.unsqueeze(0)
-    print(x.shape,y.shape)
-    out=bp(x)
-    print(out)
+    
+    count_above_threshold = (x[0][0] > 0.8).sum().item()
+    print(count_above_threshold)
+    #out=bp(x)
+    #print(out)
     break

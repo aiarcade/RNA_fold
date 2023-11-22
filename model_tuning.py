@@ -27,14 +27,14 @@ from settings import *
 
 def objective(trial: optuna.trial.Trial) -> float:
     # We optimize the number of layers, hidden units in each layer and dropouts.
-    n_rnnlayers = trial.suggest_int("n_layers",8,100)
-    h_size   =  trial.suggest_int(f'h_units',8,64)
-    l_size =  trial.suggest_int(f'l_units',8,64)
+    l_size =  trial.suggest_int(f'l_units',300,1000)
     lr = trial.suggest_float('learning_rate', 1e-5, 1000,log=True)
-    model = SimpleRNN(input_size=1, hidden_size=h_size,output_size=1,n_rnn_layers=n_rnnlayers,linear_size=l_size,learning_rate=lr)
-    datamodule = RNADataModule(experiment="DMS_MaP", batch_size=TUNING_BATCH_SIZE,data_file=SAMPLE_DATA)
+    model = SimpleNN(l_size=l_size,learning_rate=lr)
+    datamodule = RNANNDataModule(experiment="2A3_MaP", batch_size=TUNING_BATCH_SIZE,data_file=TRAIN_DATASET_FILE)
 
     trainer = pl.Trainer(
+        limit_train_batches=0.1,
+        limit_val_batches=50,
         logger=True,
         enable_checkpointing=False,
         max_epochs=TUNING_EPOCHS,
@@ -42,7 +42,7 @@ def objective(trial: optuna.trial.Trial) -> float:
         devices=1,
         callbacks=[PyTorchLightningPruningCallback(trial, monitor="val_loss")],
     )
-    hyperparameters = dict(hidden_size=h_size,n_rnn_layers=n_rnnlayers,linear_size=l_size,learning_rate=lr)
+    hyperparameters = dict(l_size=l_size,learning_rate=lr)
     trainer.logger.log_hyperparams(hyperparameters)
     trainer.fit(model, datamodule=datamodule)
 

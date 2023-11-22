@@ -15,9 +15,9 @@ class Imageset():
         for index, row in self.df.iterrows():
             ids=np.array([row['id_min'],row['id_max']])
             file_path=self.target_dir+"/"+str(ids[0])+".npz"
-            if os.path.exists(file_path):
-                id=id+1
-                continue
+            # if os.path.exists(file_path):
+            #     id=id+1
+            #     continue
             seq=self.encode_rna_sequence(row['sequence'])
             seq_len=len(row['sequence'])
                   

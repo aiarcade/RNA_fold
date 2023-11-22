@@ -29,3 +29,40 @@
 23:37:36,555 root INFO Prediction started
 23:37:36,625 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/2a3.ckpt
 23:37:38,91 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/dms.ckpt
+06:41:28,865 root INFO Prediction started
+06:41:28,923 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/2a3.ckpt
+06:41:30,260 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/dms.ckpt
+06:42:50,529 root INFO Prediction started
+06:42:50,586 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/2a3.ckpt
+06:42:51,930 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/dms.ckpt
+22:30:40,225 root INFO Prediction started
+22:30:40,281 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/2a3_v2.ckpt
+22:30:57,524 root INFO Prediction started
+22:30:57,581 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/2a3_v2.ckpt
+22:32:01,700 root INFO Prediction started
+22:32:01,757 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/2a3_v2.ckpt
+22:45:33,251 root INFO Prediction started
+22:47:02,377 root INFO Prediction started
+22:47:02,392 parquet DEBUG Using json encoder/decoder
+22:50:06,297 root INFO Prediction started
+22:50:06,308 parquet DEBUG Using json encoder/decoder
+22:51:41,603 root INFO Prediction started
+22:51:41,615 parquet DEBUG Using json encoder/decoder
+22:54:26,761 root INFO Prediction started
+22:54:26,772 parquet DEBUG Using json encoder/decoder
+22:56:22,109 root INFO Prediction started
+22:56:22,120 parquet DEBUG Using json encoder/decoder
+22:58:37,609 root INFO Prediction started
+22:58:37,620 parquet DEBUG Using json encoder/decoder
+12:57:49,372 root INFO Prediction started
+12:57:49,385 parquet DEBUG Using json encoder/decoder
+12:58:13,652 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/2a3_nn.ckpt
+12:58:56,787 root INFO Prediction started
+12:58:56,798 parquet DEBUG Using json encoder/decoder
+12:59:21,47 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/2a3_nn.ckpt
+13:04:54,997 root INFO Prediction started
+13:04:55,8 parquet DEBUG Using json encoder/decoder
+13:05:20,234 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/2a3_nn.ckpt
+13:05:45,985 root INFO Prediction started
+13:05:45,998 parquet DEBUG Using json encoder/decoder
+13:06:10,442 fsspec.local DEBUG open file: /raid/nvidiasys/RNA_fold/2a3_nn.ckpt
