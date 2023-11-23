@@ -46,9 +46,9 @@ if __name__ == "__main__":
         dirpath=MODEL_DIR_PREFIX+experiment_type
     ) 
     #validation_loss_callback = ValidationLossCallback()
-    trainer = pl.Trainer(limit_train_batches=0.1,limit_val_batches=200,max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback],accelerator=ACCELERATION, devices=DEVICES, strategy="ddp")
+    trainer = pl.Trainer(max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback],accelerator=ACCELERATION, devices=DEVICES, strategy="ddp")
 
-    # Train the model
+    # Train the model limit_train_batches=0.1,limit_val_batches=200
     trainer.fit(lmodel, datamodule=datamodule)
 
 
