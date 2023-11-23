@@ -554,7 +554,7 @@ class RNA_TRDataset(Dataset):
         #print(idx,seq.shape,reactivity.shape)
         reactivity=self.pad_tensor(reactivity,480)
         #print(seq.shape,reactivity.shape)
-        return seq.unsqueeze(0),reactivity
+        return seq.unsqueeze(0),reactivity.unsqueeze(0)
 
     def encode_rna_sequence(self,sequence):
         nucleotide_mapping = {'A': 0.25, 'C': 0.5, 'G': 0.75, 'U': 1.0}
@@ -577,3 +577,38 @@ class RNA_TRDataset(Dataset):
         padded_tensor = torch.nn.functional.pad(input_tensor, (0, pad_end), value=0)
         
         return padded_tensor
+
+class RNATRDataModule(pl.LightningDataModule):
+    def __init__(self, experiment: str, batch_size: int, data_file: str = "subset_data.parquet"):
+        super().__init__()
+        self.experiment =  experiment
+        self.batch_size = batch_size
+        self.file=data_file
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        data=pd.read_parquet(self.file, engine='fastparquet')
+        dataset=RNA_TRDataset(data,self.experiment)
+        train_size = int(0.9 * len(dataset))
+        val_size = (len(dataset) - train_size) 
+        #test_size = len(dataset) - train_size - val_size
+        self.no_workers=7
+        self.train_dataset, self.val_dataset = random_split(dataset, [train_size, val_size])
+
+    def train_dataloader(self) -> DataLoader:
+        return  DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True,num_workers=self.no_workers,pin_memory=True)
+
+    def val_dataloader(self) -> DataLoader:
+        return DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False,num_workers=self.no_workers,pin_memory=True)
+    
+    def test_dataloader(self) -> DataLoader:
+        return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False,num_workers=self.no_workers,pin_memory=True)
+    
+    def custom_collate_fn(self,data):
+        inputs=[]
+        labels=[]
+        for x,y in data:
+            inputs.append(x)
+            labels.append(y)
+        input_tensors = pad_sequence(inputs, batch_first=True, padding_value=0)
+        label_tensors = pad_sequence(labels, batch_first=True, padding_value=0)
+        return input_tensors,label_tensors

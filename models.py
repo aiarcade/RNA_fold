@@ -559,3 +559,63 @@ class CRNN(pl.LightningModule):
         # Adam optimizer
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         return optimizer
+
+class TransformerModel(nn.Module):
+    def __init__(self, d_model, nhead, num_encoder_layers, num_decoder_layers):
+        super(TransformerModel, self).__init__()
+        self.transformer = nn.Transformer(d_model, nhead, num_encoder_layers, num_decoder_layers,batch_first=True)
+
+    def forward(self, src, tgt=None):
+        if tgt is None:
+            tgt=src
+            output = self.transformer(src,tgt)
+        else:
+            output = self.transformer(src, tgt)
+        return output
+
+
+class SimpleTFModel(pl.LightningModule):
+    def __init__(self,d_model, nhead, num_encoder_layers, num_decoder_layers,learning_rate=1e-2):
+        super(SimpleTFModel, self).__init__()
+        self.transformer = nn.Transformer(d_model, nhead, num_encoder_layers, num_decoder_layers,batch_first=True)
+        self.lr=learning_rate
+        
+    def forward(self, src, tgt=None):
+        if tgt is None:
+            tgt=src
+            output = self.transformer(src,tgt)
+        else:
+            output = self.transformer(src, tgt)
+        return output
+
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+        #print(x.shape)
+        outputs = self(x)  # Add an extra dimension for input_size
+        loss = nn.MSELoss()(outputs.squeeze(), y.squeeze())
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        #print(len(batch[0]))
+        x, y = batch
+        #print(x.shape)
+        outputs = self(x)  # Add an extra dimension for input_size
+        loss = nn.MSELoss()(outputs.squeeze(), y.squeeze())
+        self.log("val_loss", loss, prog_bar=True,sync_dist=True)
+        self.log("hp_metric",loss, on_step=False, on_epoch=True,sync_dist=True)
+        return loss
+    def test_step(self, batch, batch_idx):
+        x, y = batch
+        outputs = self(x.unsqueeze(-1))  # Add an extra dimension for input_size
+        loss = nn.MSELoss()(outputs.squeeze(), y.squeeze())
+
+        # Assuming a threshold of 0.5 for binary classification
+        predicted_labels = (outputs.squeeze() >= 0.5).float()
+        correct_predictions = (predicted_labels == y.squeeze()).float()
+        accuracy = correct_predictions.mean()
+        self.log('test_acc', accuracy, on_step=True, on_epoch=True, prog_bar=True)
+        return {'test_loss': loss, 'test_accuracy': accuracy}
+    def configure_optimizers(self):
+        # Adam optimizer
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
+        return optimizer
