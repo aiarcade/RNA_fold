@@ -43,19 +43,28 @@ def length(min,max):
 
 #df=pd.read_csv("../test_sequences.csv")
 df=pd.read_parquet("../train_data.parquet")
+reactivity_cols = df.filter(like='reactivity').columns
+df['reactivity'] = df[reactivity_cols].values.tolist()
+df = df.drop(columns=df.filter(like='reactivity_').columns,axis=1)
+df=df.reset_index(drop=True)
+df_exploded = df.explode('reactivity')
+print(df_exploded.columns)
+print(df_exploded['reactivity'].min())
+print(df_exploded['reactivity'].max())
+
 #df['sequence_length']= df.apply(lambda row: length(row['id_min'], row['id_max']), axis=1)
-df['sequence_length']= df['sequence'].apply(len)
-length_counts = df['sequence_length'].value_counts()
+# df['sequence_length']= df['sequence'].apply(len)
+# length_counts = df['sequence_length'].value_counts()
 
-# Print the count of each unique length
-print(length_counts)
+# # Print the count of each unique length
+# print(length_counts)
 
-df=pd.read_csv("../test_sequences.csv")
-#df=pd.read_parquet("../train_data.parquet")
-#df['sequence_length']= df.apply(lambda row: length(row['id_min'], row['id_max']), axis=1)
-df['sequence_length']= df['sequence'].apply(len)
-length_counts = df['sequence_length'].value_counts()
+# df=pd.read_csv("../test_sequences.csv")
+# #df=pd.read_parquet("../train_data.parquet")
+# #df['sequence_length']= df.apply(lambda row: length(row['id_min'], row['id_max']), axis=1)
+# df['sequence_length']= df['sequence'].apply(len)
+# length_counts = df['sequence_length'].value_counts()
 
-# Print the count of each unique length
-print(length_counts)
+# # Print the count of each unique length
+# print(length_counts)
 

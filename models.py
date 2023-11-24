@@ -577,7 +577,7 @@ class TransformerModel(nn.Module):
 class SimpleTFModel(pl.LightningModule):
     def __init__(self,d_model, nhead, num_encoder_layers, num_decoder_layers,learning_rate=None):
         super(SimpleTFModel, self).__init__()
-        self.transformer = nn.Transformer(d_model, nhead, num_encoder_layers, num_decoder_layers,batch_first=True,dropout=0.2)
+        self.transformer = nn.Transformer(d_model, nhead, num_encoder_layers, num_decoder_layers,batch_first=True,dropout=0.0)
         self.lr=learning_rate
         
     def forward(self, src, tgt=None):

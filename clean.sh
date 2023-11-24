@@ -1,3 +1,3 @@
 rm -rf ../out*
-lightning_logs/
+rm -rf lightning_logs/
 rm nohup.out

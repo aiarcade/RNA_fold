@@ -27,7 +27,7 @@ if __name__ == "__main__":
     nhead = 480
     num_encoder_layers = 124
     num_decoder_layers = 124
-    learning_rate=8e-4
+    learning_rate=1e-5
 
     if experiment_type=="2A3_MaP":
         lmodel = SimpleTFModel(d_model, nhead, num_encoder_layers, num_decoder_layers,learning_rate)
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         dirpath=MODEL_DIR_PREFIX+experiment_type
     ) 
     #validation_loss_callback = ValidationLossCallback()
-    trainer = pl.Trainer(limit_train_batches=0.25,limit_val_batches=500,max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback],accelerator=ACCELERATION, devices=DEVICES, strategy="ddp")
+    trainer = pl.Trainer(limit_train_batches=0.2,limit_val_batches=200,max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback],accelerator=ACCELERATION, devices=DEVICES, strategy="ddp")
 
     # Train the model limit_train_batches=0.1,limit_val_batches=200
     trainer.fit(lmodel, datamodule=datamodule)
