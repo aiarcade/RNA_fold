@@ -612,3 +612,26 @@ class RNATRDataModule(pl.LightningDataModule):
         input_tensors = pad_sequence(inputs, batch_first=True, padding_value=0)
         label_tensors = pad_sequence(labels, batch_first=True, padding_value=0)
         return input_tensors,label_tensors
+
+
+class RNA_TFTestDataset(Dataset):
+    def __init__(self,df):
+        self.df=df
+        
+    def __len__(self):
+        return len(self.df)  
+    
+    def __getitem__(self, idx):
+        row=self.df.loc[idx]
+        seq=self.encode_rna_sequence(row['sequence'])
+ 
+        return seq,row['id_min'],row['id_max']
+
+    def encode_rna_sequence(self,sequence):
+        nucleotide_mapping = {'A': 0.25, 'C': 0.5, 'G': 0.75, 'U': 1.0}
+        mapped_seq=[nucleotide_mapping[nt] for nt in sequence]
+        encoded_sequence = np.array(mapped_seq)
+        original_tensor=torch.Tensor(encoded_sequence)
+        padding_size = max(0, 480 - original_tensor.size(0))
+        padded_tensor = torch.nn.functional.pad(original_tensor, (0, padding_size), mode='constant', value=0)
+        return  padded_tensor 
