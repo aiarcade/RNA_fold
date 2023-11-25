@@ -9,6 +9,7 @@ __pycache__/
 *.parquet
 *.zip
 *.ckpt
+*.out
 push.txt
 # Distribution / packaging
 lightning_logs/

@@ -136,7 +136,7 @@ class SinusoidalPosEmb(nn.Module):
         return emb
 
 class RNA_Model(nn.Module):
-    def __init__(self, dim=192, depth=12, head_size=32, **kwargs):
+    def __init__(self, dim=512, depth=12, head_size=16, **kwargs):
         super().__init__()
         self.emb = nn.Embedding(4,dim)
         self.pos_enc = SinusoidalPosEmb(dim)
@@ -317,7 +317,7 @@ if __name__ == "__main__":
         outf.write(header)
         for x,ids in tqdm(test_dataloader) :
             out=model(x)
-            
+            #torch.cuda.empty_cache()
             for index in range(0,out.size()[0]):
             #print(idmin.tolist())
             
