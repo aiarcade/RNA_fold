@@ -17,6 +17,7 @@ from typing import Optional
 import sys
 import math
 from tqdm import tqdm
+from lightning.pytorch.strategies import DeepSpeedStrategy
 
 class RNA_Dataset(Dataset):
     def __init__(self, df, mode='train', seed=2023, fold=0, nfolds=4, 
@@ -32,9 +33,9 @@ class RNA_Dataset(Dataset):
         df_2A3 = df_2A3.reset_index(drop=True)
         df_DMS = df_DMS.reset_index(drop=True)
         
-        m = (df_2A3['SN_filter'].values > 0) & (df_DMS['SN_filter'].values > 0)
-        df_2A3 = df_2A3.loc[m].reset_index(drop=True)
-        df_DMS = df_DMS.loc[m].reset_index(drop=True)
+        #m = (df_2A3['SN_filter'].values > 0) & (df_DMS['SN_filter'].values > 0)
+        #df_2A3 = df_2A3.loc[m].reset_index(drop=True)
+        #df_DMS = df_DMS.loc[m].reset_index(drop=True)
         
         self.seq = df_2A3['sequence'].values
         self.L = df_2A3['L'].values
@@ -136,7 +137,7 @@ class SinusoidalPosEmb(nn.Module):
         return emb
 
 class RNA_Model(nn.Module):
-    def __init__(self, dim=512, depth=12, head_size=16, **kwargs):
+    def __init__(self, dim=512, depth=32, head_size=8, **kwargs):
         super().__init__()
         self.emb = nn.Embedding(4,dim)
         self.pos_enc = SinusoidalPosEmb(dim)
@@ -229,6 +230,7 @@ class SimpleTFModel(pl.LightningModule):
         super(SimpleTFModel, self).__init__()
         self.transformer = RNA_Model()
         self.lr=learning_rate
+        self.save_hyperparameters()
         
     def forward(self, src):
         output=self.transformer(src)
@@ -271,10 +273,43 @@ class SimpleTFModel(pl.LightningModule):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
         return optimizer
 
+deepspeed_config = {
+    "zero_allow_untested_optimizer": True,
+    "optimizer": {
+        "type": "OneBitAdam",
+        "params": {
+            "lr": 3e-5,
+            "betas": [0.998, 0.999],
+            "eps": 1e-5,
+            "weight_decay": 1e-9,
+            "cuda_aware": True,
+        },
+    },
+    "scheduler": {
+        "type": "WarmupLR",
+        "params": {
+            "last_batch_iteration": -1,
+            "warmup_min_lr": 0,
+            "warmup_max_lr": 3e-5,
+            "warmup_num_steps": 100,
+        },
+    },
+    "zero_optimization": {
+        "stage": 2,  # Enable Stage 2 ZeRO (Optimizer/Gradient state partitioning)
+        "offload_optimizer": {"device": "cpu"},  # Enable Offloading optimizer state/calculation to the host CPU
+        "contiguous_gradients": True,  # Reduce gradient fragmentation.
+        "overlap_comm": True,  # Overlap reduce/backward operation of gradients for speed.
+        "allgather_bucket_size": 2e8,  # Number of elements to all gather at once.
+        "reduce_bucket_size": 2e8,  # Number of elements we reduce/allreduce at once.
+    },
+}
+
+
+
 if __name__ == "__main__":
     pl.seed_everything(42)
-
-    if sys.argv[1]=="train":
+    task=sys.argv[1]
+    if task=="train":
 
         
 
@@ -294,35 +329,57 @@ if __name__ == "__main__":
             mode='min',
             save_top_k=1,
             save_last=True,
-            filename='tf2-model-{epoch:02d}-{val_loss:.2f}',
+            filename='tf2-model-epoch_{epoch:02d}_val_loss_{val_loss:.2f}',
             every_n_epochs=1,
             dirpath=MODEL_DIR_PREFIX
-        ) 
+        )
+        if sys.argv[2]=="start": 
         #validation_loss_callback = ValidationLossCallback()
-        trainer = pl.Trainer(max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback],accelerator=ACCELERATION, devices=DEVICES, strategy="ddp")
+            trainer = pl.Trainer(max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback],
+            accelerator=ACCELERATION, devices=DEVICES, 
+            strategy="deepspeed_stage_3")
 
-        # Train the model limit_train_batches=0.1,limit_val_batches=200
-        trainer.fit(lmodel, datamodule=datamodule)
-    else:
+            # Train the model limit_train_batches=0.1,limit_val_batches=200
+            trainer.fit(lmodel, datamodule=datamodule)
+        elif sys.argv[2]=="resume":
+            file_name=sys.argv[3]
+            SimpleTFModel.load_from_checkpoint(checkpoint_path=file_name)
+            trainer = pl.Trainer(max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback],accelerator=ACCELERATION, devices=DEVICES, strategy="ddp")
+
+            # Train the model limit_train_batches=0.1,limit_val_batches=200
+            trainer.fit(lmodel, datamodule=datamodule)
+
+    
+    elif  task=='test' :
+        filter=False
+        file_name=sys.argv[2]
         data=pd.read_csv(TEST_DATA)
+        if filter==True:
+            data=data[data['id_max'] > 267050065].reset_index(drop=True)
+            outf=open("submission.csv","a")
+        print("Data length",len(data))
         device="cuda:3"
         test_dataset=RNA_TestDataset(data,device)
         test_dataloader = DataLoader(test_dataset, batch_size=PREDICT_BATCH_SIZE, shuffle=False)
         model=SimpleTFModel()
-        checkpoint = torch.load("modeltf.ckpt")
+        checkpoint = torch.load(file_name)
         model.load_state_dict(checkpoint["state_dict"])
         model.to(device)
-        outf=open("submission.csv","w")
-        header="id,reactivity_DMS_MaP,reactivity_2A3_MaP\n"
-        outf.write(header)
+        model.eval()
+        if filter!=True:
+            outf=open("submission.csv","w")
+            header="id,reactivity_DMS_MaP,reactivity_2A3_MaP\n"
+            outf.write(header)
         for x,ids in tqdm(test_dataloader) :
             out=model(x)
+            out=out.to('cpu')
             #torch.cuda.empty_cache()
             for index in range(0,out.size()[0]):
             #print(idmin.tolist())
             
                 id_min=int(ids['id_min'][index])
                 id_max=int(ids['id_max'][index])
+                
                 
                 y=out[index].tolist()
                 idx=0

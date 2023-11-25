@@ -1,14 +1,14 @@
 import pandas as pd
 
-# Read the CSV file into a DataFrame
-# df = pd.read_csv('../submission.csv')
 
-# # Identify duplicate values in the first column
-# duplicate_rows = df[df.duplicated(subset=['id'], keep=False)]
+df = pd.read_csv('submission.csv')
 
-# # Display the duplicate rows
-# print("Duplicate Rows:")
-# print(duplicate_rows)
+# Identify duplicate values in the first column
+duplicate_rows = df[df.duplicated(subset=['id'], keep=False)]
+
+# Display the duplicate rows
+print("Duplicate Rows:")
+print(duplicate_rows)
 
 # dataset=StructureProbTestDataset("../testdata/")
 # test_dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
@@ -38,19 +38,19 @@ import pandas as pd
 #     else:
 #         id=id+1
 
-def length(min,max):
-    return max-min
+# def length(min,max):
+#     return max-min
 
-#df=pd.read_csv("../test_sequences.csv")
-df=pd.read_parquet("../train_data.parquet")
-reactivity_cols = df.filter(like='reactivity').columns
-df['reactivity'] = df[reactivity_cols].values.tolist()
-df = df.drop(columns=df.filter(like='reactivity_').columns,axis=1)
-df=df.reset_index(drop=True)
-df_exploded = df.explode('reactivity')
-print(df_exploded.columns)
-print(df_exploded['reactivity'].min())
-print(df_exploded['reactivity'].max())
+# #df=pd.read_csv("../test_sequences.csv")
+# df=pd.read_parquet("../train_data.parquet")
+# reactivity_cols = df.filter(like='reactivity').columns
+# df['reactivity'] = df[reactivity_cols].values.tolist()
+# df = df.drop(columns=df.filter(like='reactivity_').columns,axis=1)
+# df=df.reset_index(drop=True)
+# df_exploded = df.explode('reactivity')
+# print(df_exploded.columns)
+# print(df_exploded['reactivity'].min())
+# print(df_exploded['reactivity'].max())
 
 #df['sequence_length']= df.apply(lambda row: length(row['id_min'], row['id_max']), axis=1)
 # df['sequence_length']= df['sequence'].apply(len)
