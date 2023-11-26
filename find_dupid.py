@@ -2,13 +2,14 @@ import pandas as pd
 
 
 df = pd.read_csv('submission.csv')
-
+df_no_duplicates = df.drop_duplicates(subset=['id'], keep='first')
+df_no_duplicates.to_csv('submission_no_duplicates.csv', index=False)
 # Identify duplicate values in the first column
-duplicate_rows = df[df.duplicated(subset=['id'], keep=False)]
+# duplicate_rows = df[df.duplicated(subset=['id'], keep=False)]
 
-# Display the duplicate rows
-print("Duplicate Rows:")
-print(duplicate_rows)
+# # Display the duplicate rows
+# print("Duplicate Rows:")
+# print(duplicate_rows)
 
 # dataset=StructureProbTestDataset("../testdata/")
 # test_dataloader = DataLoader(dataset, batch_size=1, shuffle=False)

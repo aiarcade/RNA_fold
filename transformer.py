@@ -33,9 +33,9 @@ class RNA_Dataset(Dataset):
         df_2A3 = df_2A3.reset_index(drop=True)
         df_DMS = df_DMS.reset_index(drop=True)
         
-        #m = (df_2A3['SN_filter'].values > 0) & (df_DMS['SN_filter'].values > 0)
-        #df_2A3 = df_2A3.loc[m].reset_index(drop=True)
-        #df_DMS = df_DMS.loc[m].reset_index(drop=True)
+        m = (df_2A3['SN_filter'].values > 0) & (df_DMS['SN_filter'].values > 0)
+        df_2A3 = df_2A3.loc[m].reset_index(drop=True)
+        df_DMS = df_DMS.loc[m].reset_index(drop=True)
         
         self.seq = df_2A3['sequence'].values
         self.L = df_2A3['L'].values
@@ -337,14 +337,15 @@ if __name__ == "__main__":
         #validation_loss_callback = ValidationLossCallback()
             trainer = pl.Trainer(max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback],
             accelerator=ACCELERATION, devices=DEVICES, 
-            strategy="deepspeed_stage_3")
+            strategy="ddp")
 
             # Train the model limit_train_batches=0.1,limit_val_batches=200
             trainer.fit(lmodel, datamodule=datamodule)
         elif sys.argv[2]=="resume":
             file_name=sys.argv[3]
             SimpleTFModel.load_from_checkpoint(checkpoint_path=file_name)
-            trainer = pl.Trainer(max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback],accelerator=ACCELERATION, devices=DEVICES, strategy="ddp")
+            trainer = pl.Trainer(max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback],
+            accelerator=ACCELERATION, devices=DEVICES, strategy="ddp")
 
             # Train the model limit_train_batches=0.1,limit_val_batches=200
             trainer.fit(lmodel, datamodule=datamodule)
@@ -355,16 +356,16 @@ if __name__ == "__main__":
         file_name=sys.argv[2]
         data=pd.read_csv(TEST_DATA)
         if filter==True:
-            data=data[data['id_max'] > 267050065].reset_index(drop=True)
-            outf=open("submission.csv","a")
+            data=data[data['id_max'] > 266437565].reset_index(drop=True)
+            outf=open("balance_submission.csv","w")
         print("Data length",len(data))
-        device="cuda:3"
+        device="cuda:1"
         test_dataset=RNA_TestDataset(data,device)
         test_dataloader = DataLoader(test_dataset, batch_size=PREDICT_BATCH_SIZE, shuffle=False)
-        model=SimpleTFModel()
-        checkpoint = torch.load(file_name)
-        model.load_state_dict(checkpoint["state_dict"])
-        model.to(device)
+        model=SimpleTFModel.load_from_checkpoint(file_name,map_location=torch.device('cuda:3'))
+        # checkpoint = torch.load(file_name)
+        # model.load_state_dict(checkpoint["state_dict"])
+        # model.to(device)
         model.eval()
         if filter!=True:
             outf=open("submission.csv","w")
@@ -373,6 +374,7 @@ if __name__ == "__main__":
         for x,ids in tqdm(test_dataloader) :
             out=model(x)
             out=out.to('cpu')
+            del x
             #torch.cuda.empty_cache()
             for index in range(0,out.size()[0]):
             #print(idmin.tolist())
