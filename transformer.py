@@ -20,10 +20,10 @@ from tqdm import tqdm
 from lightning.pytorch.strategies import DeepSpeedStrategy
 
 class RNA_Dataset(Dataset):
-    def __init__(self, df, mode='train', seed=2023, fold=0, nfolds=4, 
+    def __init__(self, df, mode='train', seed=42, fold=0, nfolds=4, 
                  mask_only=False, **kwargs):
         self.seq_map = {'A':0,'C':1,'G':2,'U':3}
-        self.Lmax = 206
+        self.Lmax = 457
         df['L'] = df.sequence.apply(len)
         df_2A3 = df.loc[df.experiment_type=='2A3_MaP']
         df_DMS = df.loc[df.experiment_type=='DMS_MaP']
@@ -67,18 +67,26 @@ class RNA_Dataset(Dataset):
         mask[:len(seq)] = True
         seq = np.pad(seq,(0,self.Lmax-len(seq)))
         
-        react = torch.from_numpy(np.stack([self.react_2A3[idx],
-                                           self.react_DMS[idx]],-1))
+        react_2A3=self.react_2A3[idx]
+        react_2A3= np.pad(react_2A3,(0,self.Lmax-len(react_2A3)))
+
+        react_DMS=self.react_DMS[idx]
+        react_DMS= np.pad(react_DMS,(0,self.Lmax-len(react_DMS)))
+
+        react = torch.from_numpy(np.stack([react_2A3,
+                                           react_DMS],-1))
         react_err = torch.from_numpy(np.stack([self.react_err_2A3[idx],
                                                self.react_err_DMS[idx]],-1))
         sn = torch.FloatTensor([self.sn_2A3[idx],self.sn_DMS[idx]])
+
+        #print("loader",react.shape)
         
         return {'seq':torch.from_numpy(seq), 'mask':mask}, \
                {'react':react, 'react_err':react_err,
                 'sn':sn, 'mask':mask}
     
 class RNA_TestDataset(Dataset):
-    def __init__(self, df, mode='train', seed=2023, fold=0, nfolds=4, 
+    def __init__(self, df, mode='train', seed=42, fold=0, nfolds=4, 
                  mask_only=False,device="cuda:3"):
         self.seq_map = {'A':0,'C':1,'G':2,'U':3}
         self.Lmax = 457
@@ -122,7 +130,7 @@ class RNA_TestDataset(Dataset):
 
 
 class SinusoidalPosEmb(nn.Module):
-    def __init__(self, dim=16, M=10000):
+    def __init__(self, dim=16, M=32768):#10000):
         super().__init__()
         self.dim = dim
         self.M = M
@@ -137,7 +145,7 @@ class SinusoidalPosEmb(nn.Module):
         return emb
 
 class RNA_Model(nn.Module):
-    def __init__(self, dim=512, depth=32, head_size=8, **kwargs):
+    def __init__(self, dim=512, depth=48, head_size=8, **kwargs):
         super().__init__()
         self.emb = nn.Embedding(4,dim)
         self.pos_enc = SinusoidalPosEmb(dim)
@@ -203,7 +211,7 @@ class RNADataModule(pl.LightningDataModule):
         train_size = int(0.9 * len(dataset))
         val_size = (len(dataset) - train_size) 
         #test_size = len(dataset) - train_size - val_size
-        self.no_workers=7
+        self.no_workers=24
         self.train_dataset, self.val_dataset = random_split(dataset, [train_size, val_size])
 
     def train_dataloader(self) -> DataLoader:
@@ -236,6 +244,8 @@ class SimpleTFModel(pl.LightningModule):
         output=self.transformer(src)
         return output
     def loss(self,pred,target):
+        #print("pred",pred.shape)
+        #print("target",target['react'].shape)
         p = pred[target['mask'][:,:pred.shape[1]]]
         y = target['react'][target['mask']].clip(0,1)
         loss = F.l1_loss(p, y, reduction='none')
@@ -273,36 +283,6 @@ class SimpleTFModel(pl.LightningModule):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
         return optimizer
 
-deepspeed_config = {
-    "zero_allow_untested_optimizer": True,
-    "optimizer": {
-        "type": "OneBitAdam",
-        "params": {
-            "lr": 3e-5,
-            "betas": [0.998, 0.999],
-            "eps": 1e-5,
-            "weight_decay": 1e-9,
-            "cuda_aware": True,
-        },
-    },
-    "scheduler": {
-        "type": "WarmupLR",
-        "params": {
-            "last_batch_iteration": -1,
-            "warmup_min_lr": 0,
-            "warmup_max_lr": 3e-5,
-            "warmup_num_steps": 100,
-        },
-    },
-    "zero_optimization": {
-        "stage": 2,  # Enable Stage 2 ZeRO (Optimizer/Gradient state partitioning)
-        "offload_optimizer": {"device": "cpu"},  # Enable Offloading optimizer state/calculation to the host CPU
-        "contiguous_gradients": True,  # Reduce gradient fragmentation.
-        "overlap_comm": True,  # Overlap reduce/backward operation of gradients for speed.
-        "allgather_bucket_size": 2e8,  # Number of elements to all gather at once.
-        "reduce_bucket_size": 2e8,  # Number of elements we reduce/allreduce at once.
-    },
-}
 
 
 
