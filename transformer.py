@@ -313,13 +313,13 @@ if __name__ == "__main__":
             every_n_epochs=1,
             dirpath=MODEL_DIR_PREFIX
         )
-        early_stop_callback = EarlyStopping(
-            monitor='val_loss',
-            patience=5,
-            strict=False,
-            verbose=False,
-            mode='min'
-        )
+        # early_stop_callback = EarlyStopping(
+        #     monitor='val_loss',
+        #     patience=5,
+        #     strict=False,
+        #     verbose=False,
+        #     mode='min'
+        # )
         if sys.argv[2]=="start": 
         #validation_loss_callback = ValidationLossCallback()
             trainer = pl.Trainer(max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback,EarlyStopping],
@@ -343,7 +343,7 @@ if __name__ == "__main__":
         file_name=sys.argv[2]
         data=pd.read_csv(TEST_DATA)
         if filter==True:
-            data=data[data['id_max'] > 266437565].reset_index(drop=True)
+            data=data[data['id_max'] > 267052521].reset_index(drop=True)
             outf=open("balance_submission.csv","w")
         print("Data length",len(data))
         device="cuda:1"

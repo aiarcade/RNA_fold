@@ -1,15 +1,13 @@
 import pandas as pd
 
 
-# df = pd.read_csv('submission.csv')
-# df_no_duplicates = df.drop_duplicates(subset=['id'], keep='first')
-# df_no_duplicates.to_csv('submission_no_duplicates.csv', index=False)
-# Identify duplicate values in the first column
-# duplicate_rows = df[df.duplicated(subset=['id'], keep=False)]
+df = pd.read_csv('submission_no_duplicates.csv')
 
-# # Display the duplicate rows
-# print("Duplicate Rows:")
-# print(duplicate_rows)
+duplicate_rows = df[df.duplicated(subset=['id'], keep=False)]
+
+# Display the duplicate rows
+print("Duplicate Rows:")
+print(duplicate_rows)
 
 # dataset=StructureProbTestDataset("../testdata/")
 # test_dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
@@ -43,7 +41,7 @@ import pandas as pd
 #     return max-min
 
 # #df=pd.read_csv("../test_sequences.csv")
-df=pd.read_parquet("../train_data.parquet")
+#df=pd.read_parquet("../train_data.parquet")
 # reactivity_cols = df.filter(like='reactivity').columns
 # df['reactivity'] = df[reactivity_cols].values.tolist()
 # df = df.drop(columns=df.filter(like='reactivity_').columns,axis=1)
@@ -55,11 +53,11 @@ df=pd.read_parquet("../train_data.parquet")
 
 #df['sequence_length']= df.apply(lambda row: length(row['id_min'], row['id_max']), axis=1)
 
-df['sequence_length']= df['sequence'].apply(len)
-length_counts = df['sequence_length'].value_counts()
+# df['sequence_length']= df['sequence'].apply(len)
+# length_counts = df['sequence_length'].value_counts()
 
-# # Print the count of each unique length
-print(length_counts)
+# # # Print the count of each unique length
+# print(length_counts)
 
 # df=pd.read_csv("../test_sequences.csv")
 # #df=pd.read_parquet("../train_data.parquet")
