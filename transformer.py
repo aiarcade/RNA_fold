@@ -234,7 +234,7 @@ class RNADataModule(pl.LightningDataModule):
         return input_tensors,label_tensors
 
 class SimpleTFModel(pl.LightningModule):
-    def __init__(self,learning_rate=5e-4):#,d_model, nhead, num_encoder_layers, num_decoder_layers,learning_rate=None):
+    def __init__(self,learning_rate=8e-4):#,d_model, nhead, num_encoder_layers, num_decoder_layers,learning_rate=None):
         super(SimpleTFModel, self).__init__()
         self.transformer = RNA_Model()
         self.lr=learning_rate
@@ -313,9 +313,16 @@ if __name__ == "__main__":
             every_n_epochs=1,
             dirpath=MODEL_DIR_PREFIX
         )
+        early_stop_callback = EarlyStopping(
+            monitor='val_loss',
+            patience=5,
+            strict=False,
+            verbose=False,
+            mode='min'
+        )
         if sys.argv[2]=="start": 
         #validation_loss_callback = ValidationLossCallback()
-            trainer = pl.Trainer(max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback],
+            trainer = pl.Trainer(max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback,EarlyStopping],
             accelerator=ACCELERATION, devices=DEVICES, 
             strategy="ddp")
 
