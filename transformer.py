@@ -170,6 +170,8 @@ class RNA_Model(nn.Module):
         
         return x
 
+
+
 def loss(pred,target):
     p = pred[target['mask'][:,:pred.shape[1]]]
     y = target['react'][target['mask']].clip(0,1)
@@ -177,6 +179,38 @@ def loss(pred,target):
     loss = loss[~torch.isnan(loss)].mean()
     
     return loss
+
+
+class GPT2Model(nn.Module):
+    def __init__(self, dim=512, depth=48, head_size=8, num_layers=48):
+        super().__init__()
+        self.emb = nn.Embedding(4, dim)
+        self.pos_enc = SinusoidalPosEmb(dim)
+        self.transformer_layers = nn.ModuleList([
+            nn.TransformerEncoderLayer(d_model=dim, nhead=dim//head_size, dim_feedforward=4*dim,
+                                       dropout=0.1, activation=nn.GELU(), batch_first=True, norm_first=True)
+            for _ in range(num_layers)
+        ])
+        self.transformer = nn.ModuleList(self.transformer_layers)
+        self.proj_out = nn.Linear(dim, 2)
+
+    def forward(self, x0):
+        mask = x0['mask']
+        Lmax = mask.sum(-1).max()
+        mask = mask[:, :Lmax]
+        x = x0['seq'][:, :Lmax]
+
+        pos = torch.arange(Lmax, device=x.device).unsqueeze(0)
+        pos = self.pos_enc(pos)
+        x = self.emb(x)
+        x = x + pos
+
+        for layer in self.transformer:
+            x = layer(x, src_key_padding_mask=~mask)
+
+        x = self.proj_out(x)
+
+        return x
 
 
 # class MAE(Metric):
@@ -236,7 +270,7 @@ class RNADataModule(pl.LightningDataModule):
 class SimpleTFModel(pl.LightningModule):
     def __init__(self,learning_rate=8e-4):#,d_model, nhead, num_encoder_layers, num_decoder_layers,learning_rate=None):
         super(SimpleTFModel, self).__init__()
-        self.transformer = RNA_Model()
+        self.transformer = GPT2Model()#RNA_Model()
         self.lr=learning_rate
         self.save_hyperparameters()
         
@@ -322,7 +356,7 @@ if __name__ == "__main__":
         # )
         if sys.argv[2]=="start": 
         #validation_loss_callback = ValidationLossCallback()
-            trainer = pl.Trainer(max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback,EarlyStopping],
+            trainer = pl.Trainer(max_epochs=TRAIN_EPOCHS, callbacks=[checkpoint_callback],
             accelerator=ACCELERATION, devices=DEVICES, 
             strategy="ddp")
 
