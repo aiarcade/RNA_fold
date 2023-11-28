@@ -145,14 +145,18 @@ class SinusoidalPosEmb(nn.Module):
         return emb
 
 class RNA_Model(nn.Module):
-    def __init__(self, dim=512, depth=48, head_size=8, **kwargs):
+    def __init__(self, dim=210, depth=24, head_size=7, **kwargs):
         super().__init__()
         self.emb = nn.Embedding(4,dim)
         self.pos_enc = SinusoidalPosEmb(dim)
         self.transformer = nn.TransformerEncoder(
             nn.TransformerEncoderLayer(d_model=dim, nhead=dim//head_size, dim_feedforward=4*dim,
                 dropout=0.1, activation=nn.GELU(), batch_first=True, norm_first=True), depth)
-        self.proj_out = nn.Linear(dim,2)
+        self.proj_out = nn.Sequential(
+            nn.Linear(dim, dim),  # Add a linear layer
+            nn.ReLU(),  # Add an activation function if needed
+            nn.Linear(dim, 2)  # Final projection layer
+        )
     
     def forward(self, x0):
         mask = x0['mask']
@@ -270,7 +274,7 @@ class RNADataModule(pl.LightningDataModule):
 class SimpleTFModel(pl.LightningModule):
     def __init__(self,learning_rate=8e-4):#,d_model, nhead, num_encoder_layers, num_decoder_layers,learning_rate=None):
         super(SimpleTFModel, self).__init__()
-        self.transformer = GPT2Model()#RNA_Model()
+        self.transformer = RNA_Model()
         self.lr=learning_rate
         self.save_hyperparameters()
         
