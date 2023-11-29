@@ -84,7 +84,7 @@ class RNA_Dataset(Dataset):
         return {'seq':torch.from_numpy(seq), 'mask':mask}, \
                {'react':react, 'react_err':react_err,
                 'sn':sn, 'mask':mask}
-    
+
 class RNA_TestDataset(Dataset):
     def __init__(self, df, mode='train', seed=42, fold=0, nfolds=4, 
                  mask_only=False,device="cuda:3"):
@@ -92,8 +92,6 @@ class RNA_TestDataset(Dataset):
         self.Lmax = 457
         df['L'] = df.sequence.apply(len)
         self.device=device
-
-        
         #split = list(KFold(n_splits=nfolds, random_state=seed, 
         #        shuffle=True).split(df_2A3))[fold][0 if mode=='train' else 1]
        
@@ -373,11 +371,11 @@ if __name__ == "__main__":
 
     
     elif  task=='test' :
-        filter=False
+        filter=True
         file_name=sys.argv[2]
         data=pd.read_csv(TEST_DATA)
         if filter==True:
-            data=data[data['id_max'] > 267052521].reset_index(drop=True)
+            data=data[data['id_max'] > 267050065].reset_index(drop=True)
             outf=open("balance_submission.csv","w")
         print("Data length",len(data))
         device="cuda:1"
@@ -393,10 +391,11 @@ if __name__ == "__main__":
             header="id,reactivity_DMS_MaP,reactivity_2A3_MaP\n"
             outf.write(header)
         for x,ids in tqdm(test_dataloader) :
+            #print(torch.cuda.memory_summary('cuda:3'))
             out=model(x)
             out=out.to('cpu')
             del x
-            #torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
             for index in range(0,out.size()[0]):
             #print(idmin.tolist())
             
@@ -417,4 +416,5 @@ if __name__ == "__main__":
                                 
                     outf.write(str(i)+","+str(re_dms)+","+str(re_2a3)+"\n")
                     idx=idx+1
+            del out
             
