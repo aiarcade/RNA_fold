@@ -3,7 +3,7 @@ import torch
 torch.backends.cuda.matmul.allow_tf32 = True 
 torch.backends.cudnn.allow_tf32 = True
 ACCELERATION="gpu"
-DEVICES=[0,1,2,3]
+DEVICES=[0,1]
 TRAIN_BATCH_SIZE=8
 TRAIN_EPOCHS=100
 PREDICT_BATCH_SIZE=4

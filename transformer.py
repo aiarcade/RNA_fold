@@ -7,7 +7,7 @@ from torch.utils.data import Dataset
 import pandas as pd
 import os, gc
 import numpy as np
-from sklearn.model_selection import KFold
+
 from settings import *
 import torch.optim as optim
 import pytorch_lightning as pl
@@ -87,7 +87,7 @@ class RNA_Dataset(Dataset):
     
 class RNA_TestDataset(Dataset):
     def __init__(self, df, mode='train', seed=42, fold=0, nfolds=4, 
-                 mask_only=False,device="cuda:3"):
+                 mask_only=False,device="cuda:0"):
         self.seq_map = {'A':0,'C':1,'G':2,'U':3}
         self.Lmax = 457
         df['L'] = df.sequence.apply(len)
@@ -377,17 +377,17 @@ if __name__ == "__main__":
 
     
     elif  task=='test' :
-        filter=False
+        filter=True
         file_name=sys.argv[2]
         data=pd.read_csv(TEST_DATA)
         if filter==True:
-            data=data[data['id_max'] > 267052521].reset_index(drop=True)
+            data=data[data['id_max'] > 266437565].reset_index(drop=True)
             outf=open("balance_submission.csv","w")
         print("Data length",len(data))
-        device="cuda:1"
+        device="cuda:0"
         test_dataset=RNA_TestDataset(data,device)
         test_dataloader = DataLoader(test_dataset, batch_size=PREDICT_BATCH_SIZE, shuffle=False)
-        model=SimpleTFModel.load_from_checkpoint(file_name,map_location=torch.device('cuda:3'))
+        model=SimpleTFModel.load_from_checkpoint(file_name,map_location=torch.device('cuda:0'))
         # checkpoint = torch.load(file_name)
         # model.load_state_dict(checkpoint["state_dict"])
         # model.to(device)
